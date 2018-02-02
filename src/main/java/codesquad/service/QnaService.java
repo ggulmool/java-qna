@@ -64,8 +64,8 @@ public class QnaService {
     public Answer addAnswer(User loginUser, long questionId, Answer answer) {
         Question question = findQuestionById(questionId);
         answer.writedBy(loginUser);
-        answer.setQuestion(question);
-        return answerRepository.save(answer);
+        question.addAnswer(answer);
+        return answer;
     }
 
     public Answer findAnswerById(long answerId) {

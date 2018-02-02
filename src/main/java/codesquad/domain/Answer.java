@@ -67,12 +67,6 @@ public class Answer extends AbstractEntity implements UrlGeneratable {
         this.writer = writer;
     }
 
-    public void setQuestion(Question question) {
-        if (this.question == null) {
-            this.question = question;
-        }
-    }
-
     public AnswerDto toAnswerDto() {
         return new AnswerDto(getId(), this.contents);
     }
@@ -95,6 +89,11 @@ public class Answer extends AbstractEntity implements UrlGeneratable {
     @Override
     public String generateUrl() {
         return String.format("%s/answers/%d", question.generateUrl(), getId());
+    }
+
+    @Override
+    public String generateRestUrl() {
+        return String.format("%s/answers/%d", question.generateRestUrl(), getId());
     }
 
     @Override

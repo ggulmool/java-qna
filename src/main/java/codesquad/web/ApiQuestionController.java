@@ -26,17 +26,10 @@ public class ApiQuestionController {
     private QnaService qnaService;
 
     @PostMapping("")
-    public ResponseEntity create(@LoginUser User loginUser, @Valid @RequestBody QuestionDto questionDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-            ValidationErrorsResponse validationErrorsResponse = new ValidationErrorsResponse();
-            validationErrorsResponse.addAllValidationError(fieldErrors);
-            return new ResponseEntity<>(validationErrorsResponse, HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity create(@LoginUser User loginUser, @Valid @RequestBody QuestionDto questionDto) {
         Question question = qnaService.create(loginUser, questionDto.toQuestion());
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("/api" + question.generateUrl()));
+        headers.setLocation(URI.create(question.generateRestUrl()));
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
@@ -47,14 +40,7 @@ public class ApiQuestionController {
     }
 
     @PutMapping("/{questionId}")
-    public ResponseEntity update(@LoginUser User loginUser, @PathVariable long questionId, @Valid @RequestBody QuestionDto questionDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-            ValidationErrorsResponse validationErrorsResponse = new ValidationErrorsResponse();
-            validationErrorsResponse.addAllValidationError(fieldErrors);
-            return new ResponseEntity<>(validationErrorsResponse, HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity update(@LoginUser User loginUser, @PathVariable long questionId, @Valid @RequestBody QuestionDto questionDto) {
         Question updatedQuestion = qnaService.update(loginUser, questionId, questionDto);
         return new ResponseEntity<>(updatedQuestion, HttpStatus.OK);
     }
