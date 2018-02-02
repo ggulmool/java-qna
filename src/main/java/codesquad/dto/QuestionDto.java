@@ -66,7 +66,6 @@ public class QuestionDto {
 
         if (title != null ? !title.equals(that.title) : that.title != null) return false;
         return contents != null ? contents.equals(that.contents) : that.contents == null;
-
     }
 
     @Override

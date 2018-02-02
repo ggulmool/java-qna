@@ -3,17 +3,20 @@ package codesquad.web;
 import codesquad.domain.Question;
 import codesquad.domain.User;
 import codesquad.dto.QuestionDto;
-import codesquad.dto.UserDto;
 import codesquad.security.LoginUser;
 import codesquad.service.QnaService;
+import codesquad.validate.ValidationErrorsResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -23,26 +26,42 @@ public class ApiQuestionController {
     private QnaService qnaService;
 
     @PostMapping("")
-    public ResponseEntity<Void> create(@LoginUser User loginUser, @Valid @RequestBody QuestionDto questionDto) {
+    public ResponseEntity create(@LoginUser User loginUser, @Valid @RequestBody QuestionDto questionDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            ValidationErrorsResponse validationErrorsResponse = new ValidationErrorsResponse();
+            validationErrorsResponse.addAllValidationError(fieldErrors);
+            return new ResponseEntity<>(validationErrorsResponse, HttpStatus.BAD_REQUEST);
+        }
+
         Question question = qnaService.create(loginUser, questionDto.toQuestion());
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("/api/questions/" + question.getId()));
+        headers.setLocation(URI.create("/api" + question.generateUrl()));
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Question> read(@PathVariable long id) {
-        Question question = qnaService.findById(id);
-        return new ResponseEntity<Question>(question, HttpStatus.OK);
+    @GetMapping("/{questionId}")
+    public ResponseEntity<Question> read(@PathVariable long questionId) {
+        Question question = qnaService.findQuestionById(questionId);
+        return new ResponseEntity<>(question, HttpStatus.OK);
     }
 
-    @PutMapping("{id}")
-    public void update(@LoginUser User loginUser, @PathVariable long id, @Valid @RequestBody QuestionDto questionDto) {
-        qnaService.update(loginUser, id, questionDto);
+    @PutMapping("/{questionId}")
+    public ResponseEntity update(@LoginUser User loginUser, @PathVariable long questionId, @Valid @RequestBody QuestionDto questionDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            ValidationErrorsResponse validationErrorsResponse = new ValidationErrorsResponse();
+            validationErrorsResponse.addAllValidationError(fieldErrors);
+            return new ResponseEntity<>(validationErrorsResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        Question updatedQuestion = qnaService.update(loginUser, questionId, questionDto);
+        return new ResponseEntity<>(updatedQuestion, HttpStatus.OK);
     }
 
-    @DeleteMapping("{id}")
-    public void delete(@LoginUser User loginUser, @PathVariable long id) {
-        qnaService.deleteQuestion(loginUser, id);
+    @DeleteMapping("/{questionId}")
+    public ResponseEntity delete(@LoginUser User loginUser, @PathVariable long questionId) {
+        qnaService.deleteQuestion(loginUser, questionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
